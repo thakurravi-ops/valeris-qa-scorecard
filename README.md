@@ -6,6 +6,8 @@ A single-page web application for Pharmacy Benefits Verification (PBV) call qual
 
 **Live URL:** https://thakurravi-ops.github.io/valeris-qa-scorecard/
 
+**GitHub Repo:** https://github.com/thakurravi-ops/valeris-qa-scorecard
+
 ---
 
 ## Features
@@ -13,6 +15,7 @@ A single-page web application for Pharmacy Benefits Verification (PBV) call qual
 | Feature | Description |
 |---|---|
 | **Score-Based QA** | Each check scored 1–5 (not Pass/Fail). Overall weighted score determines Successful (≥80%) or Fail. |
+| **AI-Assisted Scoring** | Upload call script + patient data + transcript → Claude API auto-scores all 19 checks with justifications. |
 | **AI Pre-Live Checklist** | Binary Pass/Fail for Go/No-Go launch decisions. Blockers must all pass. |
 | **Admin Panel** | Add/edit/delete checks, manage programs, adjust scoring weights — no code changes needed. |
 | **Google Sheet Sync** | Config + submissions stored in Google Sheets for co-ownership across the team. |
@@ -26,6 +29,11 @@ A single-page web application for Pharmacy Benefits Verification (PBV) call qual
 
 ### 1. Call Scorecard
 - Fill call metadata (program, ref ID, payer, etc.)
+- **AI-Assisted Scoring** (collapsible section):
+  - Upload/paste: Approved Call Script, Patient Data, Call Transcript
+  - Click "Analyze & Auto-Score" → Claude API scores all checks with notes
+  - Click "Auto-Fill Metadata Only" → extracts program, payer, call type from transcript
+  - Requires Anthropic API key (set in Admin Panel → Settings)
 - Rate each check on a **1–5 scale** + N/A
 - Score legend: **5** Excellent, **4** Good, **3** Acceptable, **2** Needs Work, **1** Poor
 - Live weighted score calculates as you go
@@ -50,7 +58,10 @@ A single-page web application for Pharmacy Benefits Verification (PBV) call qual
 ### 5. Admin Panel
 - **QA Checks Editor** — inline edit ID, section, priority, name, description. Reorder with ↑↓. Add/delete checks.
 - **AI Checks Editor** — same pattern with Blocker/Warning priorities.
-- **Settings** — manage programs list, pass threshold %, priority weights.
+- **Settings:**
+  - Programs list (add/remove)
+  - Pass threshold %, priority weights (P0/P1/P2)
+  - Anthropic API key and model selection for AI-assisted scoring
 - **Sync Controls** — save/load config to Google Sheet, export/import JSON.
 
 ---
@@ -102,6 +113,25 @@ A single-page web application for Pharmacy Benefits Verification (PBV) call qual
 
 ---
 
+## AI Pre-Live Check Items (23 checks)
+
+### Script & Prompt Compliance (Blocker)
+S1–S6: Call intro script, program name config, caller ID, callback number, drug pronunciation dictionary, no system artifacts.
+
+### Conversation & Voice Quality
+V1–V2 (Blocker): Response latency ≤2s, VAD tuned — no overtalk.
+V3–V4 (Warning): Interruption handling, end-of-turn detection.
+
+### Benefits Data Extraction
+T1–T3 (Blocker): All mandatory fields in template, entity extraction ≥95%, drug name correct in output.
+T4 (Warning): Verification sequence matches standard flow.
+
+### Edge Cases & Safety
+E1–E4 (Blocker): No hallucination, AI detection handling, human transfer path, max attempt guardrail.
+E5–E7 (Warning): IVR navigation for top payers, prior call context handling, disposition logic.
+
+---
+
 ## Scoring System
 
 ```
@@ -120,6 +150,26 @@ Threshold and weights are configurable in Admin Panel → Settings.
 
 ---
 
+## AI-Assisted Scoring Setup
+
+1. Get an Anthropic API key from https://console.anthropic.com/
+2. Open the scorecard → **Admin Panel** → **Settings** → paste the API key → **Apply Settings**
+3. Go to **Call Scorecard** tab → expand **AI-Assisted Scoring**
+4. Upload or paste:
+   - **Approved Call Script** — the reference script the agent should follow
+   - **Patient Data** — patient name, DOB, member ID, drug, payer info
+   - **Call Transcript** — the actual call being reviewed
+5. Click **Analyze & Auto-Score**
+6. Review AI-suggested scores and notes, adjust as needed, then submit
+
+**Models available:**
+- Claude Sonnet 4 (recommended) — more accurate, slower
+- Claude Haiku 4.5 — faster, cheaper, good for high-volume QA
+
+**API key security:** Stored only in your browser's localStorage. Never sent to any server except Anthropic's API directly.
+
+---
+
 ## Google Sheet Architecture
 
 ```
@@ -133,13 +183,13 @@ Google Sheet (1 workbook)
 
 ### Quick Setup
 1. Create a Google Sheet
-2. Extensions → Apps Script → paste the script from the "Google Sheet Setup" tab
+2. Extensions → Apps Script → paste the script from `gsheet_setup/setup_and_deploy.gs`
 3. **Select `setupAll` from the function dropdown → Run** (creates all 5 tabs with data)
 4. Deploy → New Deployment → Web app (Execute as: Me, Access: Anyone)
 5. Copy the Web App URL → paste into scorecard's Google Sheet Setup tab → Save
 
 ### Co-Ownership
-Anyone with edit access to the Google Sheet can modify check items and settings directly in the sheet. Changes are pulled into the scorecard via Admin Panel → "Load from Google Sheet".
+Anyone with edit access to the Google Sheet can modify check items and settings directly. Changes are pulled into the scorecard via Admin Panel → "Load from Google Sheet".
 
 ---
 
@@ -153,14 +203,24 @@ Anyone with edit access to the Google Sheet can modify check items and settings 
 
 ---
 
-## Deployment
+## Deployment (GitHub Pages)
 
-Hosted on GitHub Pages. To update:
+**Repo:** https://github.com/thakurravi-ops/valeris-qa-scorecard
+**Live:** https://thakurravi-ops.github.io/valeris-qa-scorecard/
+
+To update:
 ```bash
-# Edit the HTML file
-# Commit and push
-git add Valeris_QA_Scorecard.html
-git commit -m "Update scorecard"
+cd ~/claude-files/valeris-qa-scorecard
+# Edit index.html
+git add index.html
+git commit -m "description of change"
 git push
 # GitHub Pages auto-deploys within ~1 minute
+```
+
+To sync local copy ↔ repo copy:
+```bash
+# After editing the main file, copy to repo and push:
+cp ~/claude-files/Valeris_QA_Scorecard.html ~/claude-files/valeris-qa-scorecard/index.html
+cd ~/claude-files/valeris-qa-scorecard && git add . && git commit -m "Update" && git push
 ```
