@@ -4,7 +4,7 @@
 
 A single-page web application for Pharmacy Benefits Verification (PBV) call quality assurance. Includes a **QA Call Scorecard** (score-based, 1–5 per check) and an **AI Agent Pre-Live Checklist** (Go/No-Go binary).
 
-**Live URL:** *(will be updated after GitHub Pages deployment)*
+**Live URL:** https://thakurravi-ops.github.io/valeris-qa-scorecard/
 
 ---
 
