@@ -1,0 +1,1270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Valeris — PBV QA Scorecard</title>
+<style>
+:root{--bg:#f5f7fa;--card:#fff;--border:#e0e4ea;--p0:#dc2626;--p1:#f59e0b;--p2:#3b82f6;--pass:#16a34a;--fail:#dc2626;--na:#94a3b8;--accent:#2563eb;--dark:#1e293b;--mid:#475569;--light:#64748b;--warn:#ca8a04}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--dark);line-height:1.5}
+.container{max-width:1100px;margin:0 auto;padding:20px}
+h1{font-size:1.5rem;margin-bottom:4px}
+.subtitle{color:var(--light);font-size:.85rem;margin-bottom:20px}
+.tabs{display:flex;gap:4px;border-bottom:2px solid var(--border);margin-bottom:20px;flex-wrap:wrap}
+.tab{padding:10px 20px;cursor:pointer;font-weight:600;font-size:.85rem;color:var(--light);border-bottom:3px solid transparent;transition:.2s}
+.tab:hover{color:var(--dark)}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.tab-content{display:none}
+.tab-content.active{display:block}
+.card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:20px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.card h2{font-size:1.1rem;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.card h3{font-size:.95rem;color:var(--mid);margin:16px 0 8px;border-bottom:1px solid var(--border);padding-bottom:4px}
+.badge{font-size:.65rem;padding:2px 8px;border-radius:10px;font-weight:700;color:#fff;letter-spacing:.5px}
+.badge-p0{background:var(--p0)}.badge-p1{background:var(--p1);color:#000}.badge-p2{background:var(--p2)}
+.meta-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.meta-grid label{display:flex;flex-direction:column;font-size:.78rem;font-weight:600;color:var(--mid)}
+.meta-grid input,.meta-grid select{margin-top:4px;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:.85rem;background:#fff}
+.meta-grid input:focus,.meta-grid select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px rgba(37,99,235,.15)}
+.check-table{width:100%;border-collapse:collapse;font-size:.82rem}
+.check-table th{text-align:left;padding:8px 10px;background:#f8fafc;border-bottom:2px solid var(--border);font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;color:var(--light)}
+.check-table td{padding:8px 10px;border-bottom:1px solid #f1f5f9;vertical-align:top}
+.check-table tr:hover{background:#f8fafc}
+.check-table .num{width:30px;text-align:center;color:var(--light);font-weight:600}
+.check-table .priority{width:40px;text-align:center}
+.check-table .check-name{width:38%}
+.check-table .check-desc{color:var(--light);font-size:.75rem;margin-top:2px}
+.check-table select{padding:5px 8px;border:1px solid var(--border);border-radius:5px;font-size:.8rem;min-width:110px}
+.check-table select.result-high{background:#dcfce7;border-color:var(--pass);color:var(--pass)}
+.check-table select.result-mid{background:#fef9c3;border-color:var(--warn);color:var(--warn)}
+.check-table select.result-low{background:#fef2f2;border-color:var(--fail);color:var(--fail)}
+.check-table select.result-na{background:#f1f5f9;border-color:var(--na);color:var(--na)}
+.check-table select.result-pass{background:#dcfce7;border-color:var(--pass);color:var(--pass)}
+.check-table select.result-fail{background:#fef2f2;border-color:var(--fail);color:var(--fail)}
+.check-table input[type=text]{width:100%;padding:5px 8px;border:1px solid var(--border);border-radius:5px;font-size:.8rem}
+.check-table .verdict-col{width:120px}
+.check-table .notes-col{width:22%}
+.score-panel{display:flex;gap:20px;flex-wrap:wrap;align-items:center;padding:20px;border-radius:10px;margin-top:16px}
+.score-panel.pass-bg{background:linear-gradient(135deg,#dcfce7,#f0fdf4);border:2px solid var(--pass)}
+.score-panel.fail-bg{background:linear-gradient(135deg,#fef2f2,#fff5f5);border:2px solid var(--fail)}
+.score-panel.pending-bg{background:#f8fafc;border:2px solid var(--border)}
+.score-circle{width:90px;height:90px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.8rem;font-weight:800;color:#fff;flex-shrink:0}
+.score-circle.pass{background:var(--pass)}.score-circle.fail{background:var(--fail)}.score-circle.pending{background:var(--na)}
+.score-detail{flex:1}
+.score-detail h3{font-size:1.2rem;margin-bottom:4px}
+.score-detail p{font-size:.82rem;color:var(--mid)}
+.score-breakdown{display:flex;gap:16px;flex-wrap:wrap;margin-top:8px}
+.score-breakdown .metric{font-size:.78rem;display:flex;flex-direction:column;align-items:center;padding:6px 14px;background:rgba(255,255,255,.7);border-radius:8px}
+.score-breakdown .metric span{font-size:1.1rem;font-weight:700}
+.score-legend{display:flex;gap:12px;flex-wrap:wrap;font-size:.72rem;color:var(--light);margin-top:8px;padding:6px 10px;background:#f8fafc;border-radius:6px}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.btn{padding:10px 20px;border:none;border-radius:8px;font-size:.85rem;font-weight:600;cursor:pointer;transition:.2s;display:inline-flex;align-items:center;gap:6px}
+.btn-primary{background:var(--accent);color:#fff}.btn-primary:hover{background:#1d4ed8}
+.btn-secondary{background:#f1f5f9;color:var(--dark);border:1px solid var(--border)}.btn-secondary:hover{background:#e2e8f0}
+.btn-danger{background:var(--fail);color:#fff}.btn-danger:hover{background:#b91c1c}
+.btn-success{background:var(--pass);color:#fff}.btn-success:hover{background:#15803d}
+.toast{position:fixed;bottom:20px;right:20px;padding:12px 24px;background:#1e293b;color:#fff;border-radius:8px;font-size:.85rem;opacity:0;transform:translateY(10px);transition:.3s;z-index:999;pointer-events:none}
+.toast.show{opacity:1;transform:translateY(0)}
+.log-table{width:100%;border-collapse:collapse;font-size:.8rem}
+.log-table th{background:#f8fafc;padding:8px;text-align:left;border-bottom:2px solid var(--border);font-size:.72rem;text-transform:uppercase;letter-spacing:.5px}
+.log-table td{padding:6px 8px;border-bottom:1px solid #f1f5f9}
+.log-table tr:hover{background:#f8fafc}
+.log-table .verdict-pass{color:var(--pass);font-weight:700}
+.log-table .verdict-fail{color:var(--fail);font-weight:700}
+.ai-section .check-table select{min-width:70px}
+.setup-code{background:#1e293b;color:#e2e8f0;padding:16px;border-radius:8px;font-family:'Fira Code',monospace;font-size:.78rem;overflow-x:auto;white-space:pre;line-height:1.6;margin:12px 0}
+.setup-step{display:flex;gap:12px;margin:12px 0;align-items:flex-start}
+.setup-step .step-num{background:var(--accent);color:#fff;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.78rem;font-weight:700;flex-shrink:0}
+.setup-step .step-text{font-size:.85rem}
+.info-box{background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:14px;font-size:.82rem;color:#1e40af;margin:12px 0}
+.collapse-toggle{cursor:pointer;user-select:none;display:flex;align-items:center;gap:6px}
+.collapse-toggle:hover{color:var(--accent)}
+.collapse-body{display:none;margin-top:10px}
+.collapse-body.open{display:block}
+.admin-table{width:100%;border-collapse:collapse;font-size:.8rem}
+.admin-table th{text-align:left;padding:8px 6px;background:#f8fafc;border-bottom:2px solid var(--border);font-size:.7rem;text-transform:uppercase;letter-spacing:.5px;color:var(--light)}
+.admin-table td{padding:5px 4px;border-bottom:1px solid #f1f5f9;vertical-align:top}
+.admin-table tr:hover{background:#f8fafc}
+.admin-table input[type=text],.admin-table select,.admin-table textarea{padding:4px 6px;border:1px solid var(--border);border-radius:4px;font-size:.78rem;width:100%;font-family:inherit}
+.admin-table textarea{resize:vertical;min-height:36px}
+.admin-table .num{width:28px;text-align:center;color:var(--light);font-weight:600}
+.admin-actions{display:flex;gap:3px;flex-wrap:nowrap;white-space:nowrap}
+.admin-actions button{padding:3px 7px;font-size:.7rem;border:1px solid var(--border);border-radius:4px;cursor:pointer;background:#f8fafc;color:var(--mid)}
+.admin-actions button:hover{background:#e2e8f0}
+.admin-actions button.del{color:var(--fail)}
+.admin-actions button.del:hover{background:#fef2f2;border-color:var(--fail)}
+.chip-container{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:16px;font-size:.82rem;color:#1e40af}
+.chip-x{cursor:pointer;font-weight:700;color:var(--fail);font-size:.9rem;line-height:1}
+.chip-x:hover{color:#b91c1c}
+.sync-status{font-size:.78rem;color:var(--light);margin-bottom:12px}
+.admin-note{font-size:.78rem;color:var(--light);margin:8px 0;font-style:italic}
+@media(max-width:768px){.meta-grid{grid-template-columns:1fr}.score-panel{flex-direction:column;text-align:center}.tabs{overflow-x:auto}}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>Valeris — PBV QA Scorecard</h1>
+<p class="subtitle">Pharmacy Benefits Verification — Quality Assurance & AI Pre-Live Checklist &nbsp;|&nbsp; v2.0</p>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('scorecard')">Call Scorecard</div>
+  <div class="tab" onclick="switchTab('ai-prelive')">AI Pre-Live Checklist</div>
+  <div class="tab" onclick="switchTab('submissions')">Submission Log</div>
+  <div class="tab" onclick="switchTab('gsheet')">Google Sheet Setup</div>
+  <div class="tab" onclick="switchTab('admin')">Admin Panel</div>
+</div>
+
+<!-- ==================== TAB 1: SCORECARD ==================== -->
+<div id="tab-scorecard" class="tab-content active">
+
+<div class="card">
+  <h2>Call Metadata</h2>
+  <div class="meta-grid">
+    <label>Program
+      <select id="meta-program" onchange="onProgramSelect('meta-program')"><option value="">Select...</option></select>
+      <input type="text" id="meta-program-other" placeholder="Enter program name..." style="display:none;margin-top:4px">
+    </label>
+    <label>Reference ID <input type="text" id="meta-refid" placeholder="e.g. 50627318602"></label>
+    <label>Case ID <input type="text" id="meta-caseid" placeholder="e.g. 1919236"></label>
+    <label>Call Type <select id="meta-calltype"><option value="">Select...</option><option>AI Call</option><option>Human Call</option><option>AI → Human Transfer</option></select></label>
+    <label>Call # in Sequence <select id="meta-callnum"><option value="">Select...</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6+</option></select></label>
+    <label>Payer Name <input type="text" id="meta-payer" placeholder="e.g. Express Scripts"></label>
+    <label>Date of Call <input type="date" id="meta-calldate"></label>
+    <label>Evaluated By <input type="text" id="meta-evaluator" placeholder="QA Analyst Name"></label>
+  </div>
+</div>
+
+<div id="score-panel" class="score-panel pending-bg">
+  <div id="score-circle" class="score-circle pending">—</div>
+  <div class="score-detail">
+    <h3 id="score-verdict">Complete all checks to see verdict</h3>
+    <p id="score-summary">Rate each check item on a 1–5 scale. The weighted score determines the overall verdict.</p>
+    <div class="score-breakdown" id="score-breakdown"></div>
+  </div>
+</div>
+
+<div class="card" style="margin-top:16px">
+  <h2>Quality Checks</h2>
+  <div class="score-legend">
+    <span><b>5</b> Excellent</span>
+    <span><b>4</b> Good</span>
+    <span><b>3</b> Acceptable</span>
+    <span><b>2</b> Needs Improvement</span>
+    <span><b>1</b> Poor / Not Met</span>
+    <span><b>N/A</b> Not Applicable</span>
+  </div>
+  <table class="check-table" id="check-table">
+    <thead><tr>
+      <th class="num">#</th>
+      <th class="priority">Priority</th>
+      <th class="check-name">Check Item</th>
+      <th class="verdict-col">Score</th>
+      <th class="notes-col">Notes / Evidence</th>
+    </tr></thead>
+    <tbody id="check-body"></tbody>
+  </table>
+</div>
+
+<div class="btn-row">
+  <button class="btn btn-primary" onclick="submitScorecard()">Submit &amp; Log</button>
+  <button class="btn btn-secondary" onclick="copyRowToClipboard()">Copy as CSV Row</button>
+  <button class="btn btn-secondary" onclick="exportSingleCSV()">Download CSV</button>
+  <button class="btn btn-danger" onclick="resetForm()">Reset Form</button>
+</div>
+
+</div>
+
+<!-- ==================== TAB 2: AI PRE-LIVE ==================== -->
+<div id="tab-ai-prelive" class="tab-content ai-section">
+
+<div class="card">
+  <h2>AI Agent Pre-Live Metadata</h2>
+  <div class="meta-grid">
+    <label>Program
+      <select id="ai-program" onchange="onProgramSelect('ai-program')"><option value="">Select...</option></select>
+      <input type="text" id="ai-program-other" placeholder="Enter program name..." style="display:none;margin-top:4px">
+    </label>
+    <label>Agent Version / Build <input type="text" id="ai-version" placeholder="e.g. v2.3.1"></label>
+    <label>Tested By <input type="text" id="ai-tester" placeholder="Engineer Name"></label>
+    <label>Test Date <input type="date" id="ai-testdate"></label>
+    <label>Number of Test Calls <input type="number" id="ai-testcalls" placeholder="e.g. 20" min="1"></label>
+    <label>Target Payers Tested <input type="text" id="ai-payers" placeholder="e.g. Express Scripts, CVS, Optum"></label>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Pre-Live Checklist</h2>
+  <table class="check-table" id="ai-check-table">
+    <thead><tr>
+      <th class="num">#</th>
+      <th class="priority">Category</th>
+      <th class="check-name">Check Item</th>
+      <th class="verdict-col">Status</th>
+      <th class="notes-col">Notes / Evidence</th>
+    </tr></thead>
+    <tbody id="ai-check-body"></tbody>
+  </table>
+</div>
+
+<div id="ai-score-panel" class="score-panel pending-bg" style="margin-top:0">
+  <div id="ai-score-circle" class="score-circle pending">—</div>
+  <div class="score-detail">
+    <h3 id="ai-score-verdict">Complete all checks to see Go/No-Go</h3>
+    <p id="ai-score-summary">All Blocker items must pass for Go-Live approval. Warning items should be tracked but won't block launch.</p>
+  </div>
+</div>
+
+<div class="btn-row">
+  <button class="btn btn-primary" onclick="submitAIChecklist()">Submit AI Checklist</button>
+  <button class="btn btn-secondary" onclick="copyAIRowToClipboard()">Copy as CSV Row</button>
+  <button class="btn btn-secondary" onclick="exportAICSV()">Download CSV</button>
+  <button class="btn btn-danger" onclick="resetAIForm()">Reset</button>
+</div>
+
+</div>
+
+<!-- ==================== TAB 3: SUBMISSIONS ==================== -->
+<div id="tab-submissions" class="tab-content">
+
+<div class="card">
+  <h2>QA Submission Log</h2>
+  <p style="font-size:.82rem;color:var(--light);margin-bottom:12px">All submitted scorecards appear here. Data persists in browser localStorage.</p>
+  <div style="overflow-x:auto">
+    <table class="log-table" id="log-table">
+      <thead><tr>
+        <th>Date</th><th>Program</th><th>Ref ID</th><th>Call Type</th><th>Payer</th><th>Score</th><th>Verdict</th><th>Evaluator</th><th>Actions</th>
+      </tr></thead>
+      <tbody id="log-body"></tbody>
+    </table>
+  </div>
+  <div class="btn-row" style="margin-top:12px">
+    <button class="btn btn-primary" onclick="exportAllCSV()">Export All as CSV</button>
+    <button class="btn btn-secondary" onclick="copyAllCSV()">Copy All to Clipboard</button>
+    <button class="btn btn-danger" onclick="clearLog()">Clear All Submissions</button>
+  </div>
+</div>
+
+<div class="card">
+  <h2>AI Pre-Live Submission Log</h2>
+  <div style="overflow-x:auto">
+    <table class="log-table" id="ai-log-table">
+      <thead><tr>
+        <th>Date</th><th>Program</th><th>Version</th><th>Test Calls</th><th>Blockers Pass</th><th>Verdict</th><th>Tester</th><th>Actions</th>
+      </tr></thead>
+      <tbody id="ai-log-body"></tbody>
+    </table>
+  </div>
+  <div class="btn-row" style="margin-top:12px">
+    <button class="btn btn-primary" onclick="exportAllAICSV()">Export AI Logs as CSV</button>
+  </div>
+</div>
+
+</div>
+
+<!-- ==================== TAB 4: GOOGLE SHEET SETUP ==================== -->
+<div id="tab-gsheet" class="tab-content">
+
+<div class="card">
+  <h2>Option 1: Manual CSV Import (Quick Start)</h2>
+  <div class="info-box">Use the "Export All as CSV" or "Copy All to Clipboard" buttons from the Submission Log tab, then paste directly into Google Sheets.</div>
+  <div class="setup-step"><div class="step-num">1</div><div class="step-text">Go to the <b>Submission Log</b> tab and click <b>"Export All as CSV"</b></div></div>
+  <div class="setup-step"><div class="step-num">2</div><div class="step-text">Open Google Sheets → File → Import → Upload the CSV file</div></div>
+  <div class="setup-step"><div class="step-num">3</div><div class="step-text">Select "Replace current sheet" or "Append to current sheet" as needed</div></div>
+</div>
+
+<div class="card">
+  <h2>Option 2: Auto-Submit to Google Sheet (Recommended for Teams)</h2>
+  <p style="font-size:.85rem;color:var(--mid);margin-bottom:12px">Set up once, then every submission auto-pushes a row to your shared Google Sheet. Config sheets enable co-ownership of checks and settings.</p>
+
+  <div class="setup-step"><div class="step-num">1</div><div class="step-text"><b>Create a Google Sheet</b> with these sheets: <b>QA Submissions</b>, <b>AI Submissions</b>, <b>QA Config</b>, <b>AI Config</b>, <b>Settings</b></div></div>
+  <div class="setup-step"><div class="step-num">2</div><div class="step-text">Go to <b>Extensions → Apps Script</b> and paste the script below</div></div>
+  <div class="setup-step"><div class="step-num">3</div><div class="step-text">Click <b>Deploy → New Deployment → Web app</b>. Set "Execute as" = <b>Me</b>, "Who has access" = <b>Anyone</b>. Copy the Web App URL.</div></div>
+  <div class="setup-step"><div class="step-num">4</div><div class="step-text">Paste the URL below and click <b>Save</b>. All future submissions will auto-push. Use the <b>Admin Panel</b> tab to sync check config.</div></div>
+
+  <div style="margin:16px 0">
+    <label style="font-size:.82rem;font-weight:600;color:var(--mid)">Google Apps Script Web App URL</label>
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <input type="text" id="gsheet-url" placeholder="https://script.google.com/macros/s/XXXX/exec" style="flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:.85rem">
+      <button class="btn btn-primary" onclick="saveGSheetURL()">Save</button>
+      <button class="btn btn-secondary" onclick="testGSheetConnection()">Test</button>
+    </div>
+    <p id="gsheet-status" style="font-size:.78rem;color:var(--pass);margin-top:4px;display:none">URL saved. Submissions will auto-push to Google Sheets.</p>
+  </div>
+
+  <h3 style="font-size:.9rem;margin-top:20px">Google Sheet Tabs</h3>
+  <div class="info-box">
+    <b>QA Submissions</b> — Auto-filled on scorecard submit<br>
+    <b>AI Submissions</b> — Auto-filled on AI checklist submit<br>
+    <b>QA Config</b> — Headers: ID | Section | Priority | Name | Description<br>
+    <b>AI Config</b> — Headers: ID | Section | Priority | Name | Description<br>
+    <b>Settings</b> — Headers: Key | Value (programs, passThreshold, weightP0, weightP1, weightP2)
+  </div>
+
+  <div class="collapse-toggle" onclick="toggleCollapse('gas-code')">
+    <span id="gas-code-arrow">▶</span> <b>Google Apps Script Code</b> (click to expand)
+  </div>
+  <div class="collapse-body" id="gas-code">
+    <div class="setup-code" id="gas-script">function doPost(e) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var data = JSON.parse(e.postData.contents);
+
+    if (data.action === 'saveConfig') {
+      var qaSheet = ss.getSheetByName('QA Config') || ss.insertSheet('QA Config');
+      qaSheet.clear();
+      qaSheet.appendRow(['ID', 'Section', 'Priority', 'Name', 'Description']);
+      (data.qaChecks || []).forEach(function(c) {
+        qaSheet.appendRow([c.id, c.section, c.priority, c.name, c.desc]);
+      });
+
+      var aiSheet = ss.getSheetByName('AI Config') || ss.insertSheet('AI Config');
+      aiSheet.clear();
+      aiSheet.appendRow(['ID', 'Section', 'Priority', 'Name', 'Description']);
+      (data.aiChecks || []).forEach(function(c) {
+        aiSheet.appendRow([c.id, c.section, c.priority, c.name, c.desc]);
+      });
+
+      var setSheet = ss.getSheetByName('Settings') || ss.insertSheet('Settings');
+      setSheet.clear();
+      setSheet.appendRow(['Key', 'Value']);
+      var s = data.settings || {};
+      setSheet.appendRow(['programs', (s.programs || []).join(',')]);
+      setSheet.appendRow(['passThreshold', s.passThreshold || 80]);
+      setSheet.appendRow(['weightP0', (s.weights || {}).P0 || 3]);
+      setSheet.appendRow(['weightP1', (s.weights || {}).P1 || 2]);
+      setSheet.appendRow(['weightP2', (s.weights || {}).P2 || 1]);
+
+      return ContentService.createTextOutput(JSON.stringify({status:'ok', action:'saveConfig'}))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    var sheetName = data.sheetName || 'QA Submissions';
+    var sheet = ss.getSheetByName(sheetName) || ss.insertSheet(sheetName);
+    if (sheet.getLastRow() === 0) {
+      sheet.appendRow(data.headers);
+    }
+    sheet.appendRow(data.row);
+
+    return ContentService.createTextOutput(JSON.stringify({status:'ok'}))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({status:'error', message:err.toString()}))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function doGet(e) {
+  var action = (e && e.parameter && e.parameter.action) || 'status';
+
+  if (action === 'getConfig') {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var result = { qaChecks: [], aiChecks: [], settings: {} };
+
+    var qaSheet = ss.getSheetByName('QA Config');
+    if (qaSheet && qaSheet.getLastRow() > 1) {
+      var qaData = qaSheet.getRange(2, 1, qaSheet.getLastRow() - 1, 5).getValues();
+      result.qaChecks = qaData.map(function(r) {
+        return { id: String(r[0]), section: String(r[1]), priority: String(r[2]), name: String(r[3]), desc: String(r[4]) };
+      });
+    }
+
+    var aiSheet = ss.getSheetByName('AI Config');
+    if (aiSheet && aiSheet.getLastRow() > 1) {
+      var aiData = aiSheet.getRange(2, 1, aiSheet.getLastRow() - 1, 5).getValues();
+      result.aiChecks = aiData.map(function(r) {
+        return { id: String(r[0]), section: String(r[1]), priority: String(r[2]), name: String(r[3]), desc: String(r[4]) };
+      });
+    }
+
+    var setSheet = ss.getSheetByName('Settings');
+    if (setSheet && setSheet.getLastRow() > 1) {
+      var setData = setSheet.getRange(2, 1, setSheet.getLastRow() - 1, 2).getValues();
+      var m = {};
+      setData.forEach(function(r) { m[String(r[0])] = r[1]; });
+      result.settings = {
+        programs: String(m.programs || '').split(',').filter(Boolean),
+        passThreshold: Number(m.passThreshold) || 80,
+        weights: { P0: Number(m.weightP0) || 3, P1: Number(m.weightP1) || 2, P2: Number(m.weightP2) || 1 }
+      };
+    }
+
+    return ContentService.createTextOutput(JSON.stringify(result))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  return ContentService.createTextOutput(JSON.stringify({status:'ready'}))
+    .setMimeType(ContentService.MimeType.JSON);
+}</div>
+    <button class="btn btn-secondary" style="margin-top:8px" onclick="copyGASCode()">Copy Script</button>
+  </div>
+</div>
+</div>
+
+<!-- ==================== TAB 5: ADMIN PANEL ==================== -->
+<div id="tab-admin" class="tab-content">
+
+<div class="card">
+  <h2>QA Checks Editor</h2>
+  <p class="admin-note">Edit check items inline. Click "Apply Changes" to save. Changes will reset any in-progress scorecard form.</p>
+  <div style="overflow-x:auto">
+    <table class="admin-table" id="admin-qa-table">
+      <thead><tr>
+        <th class="num">#</th>
+        <th style="width:50px">ID</th>
+        <th style="width:150px">Section</th>
+        <th style="width:60px">Priority</th>
+        <th style="width:180px">Name</th>
+        <th>Description</th>
+        <th style="width:90px">Actions</th>
+      </tr></thead>
+      <tbody id="admin-qa-body"></tbody>
+    </table>
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="addQACheck()">+ Add QA Check</button>
+    <button class="btn btn-success" onclick="applyQAChanges()">Apply Changes</button>
+    <button class="btn btn-danger" onclick="resetQAToDefaults()">Reset to Defaults</button>
+  </div>
+</div>
+
+<div class="card">
+  <h2>AI Checks Editor</h2>
+  <p class="admin-note">Edit AI pre-live check items inline. Click "Apply Changes" to save.</p>
+  <div style="overflow-x:auto">
+    <table class="admin-table" id="admin-ai-table">
+      <thead><tr>
+        <th class="num">#</th>
+        <th style="width:50px">ID</th>
+        <th style="width:150px">Section</th>
+        <th style="width:70px">Priority</th>
+        <th style="width:180px">Name</th>
+        <th>Description</th>
+        <th style="width:90px">Actions</th>
+      </tr></thead>
+      <tbody id="admin-ai-body"></tbody>
+    </table>
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="addAICheck()">+ Add AI Check</button>
+    <button class="btn btn-success" onclick="applyAIChanges()">Apply Changes</button>
+    <button class="btn btn-danger" onclick="resetAIToDefaults()">Reset to Defaults</button>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Settings</h2>
+  <h3>Programs</h3>
+  <div class="chip-container" id="programs-chips"></div>
+  <div style="display:flex;gap:8px;margin-top:8px;max-width:400px">
+    <input type="text" id="new-program-input" placeholder="New program name..." style="flex:1;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:.85rem">
+    <button class="btn btn-primary" style="padding:6px 16px" onclick="addProgram()">Add</button>
+  </div>
+  <h3>Scoring Thresholds</h3>
+  <div class="meta-grid">
+    <label>Pass Threshold (%) <input type="number" id="setting-threshold" min="0" max="100"></label>
+    <label>P0 Weight <input type="number" id="setting-w-p0" min="1" max="10"></label>
+    <label>P1 Weight <input type="number" id="setting-w-p1" min="1" max="10"></label>
+    <label>P2 Weight <input type="number" id="setting-w-p2" min="1" max="10"></label>
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-success" onclick="applySettings()">Apply Settings</button>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Sync Controls</h2>
+  <p class="sync-status" id="sync-status">Last synced: Never</p>
+  <div class="btn-row" style="margin-top:0">
+    <button class="btn btn-primary" onclick="saveConfigToGSheet()">Save to Google Sheet</button>
+    <button class="btn btn-secondary" onclick="loadConfigFromGSheet()">Load from Google Sheet</button>
+    <button class="btn btn-secondary" onclick="exportConfigJSON()">Export Config JSON</button>
+    <button class="btn btn-secondary" onclick="document.getElementById('config-import-file').click()">Import Config JSON</button>
+  </div>
+  <input type="file" id="config-import-file" accept=".json" style="display:none" onchange="importConfigJSON(event)">
+</div>
+
+</div>
+
+</div><!-- /container -->
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== DEFAULT CHECK DEFINITIONS (Generic PBV) =====
+const DEFAULT_QA_CHECKS = [
+  // --- Section A: Call Introduction & Compliance (P0) ---
+  {id:'A1',section:'Call Introduction & Compliance',priority:'P0',
+   name:'Program Identification',
+   desc:'Agent correctly states the program name during call opening per branding guidelines.'},
+  {id:'A2',section:'Call Introduction & Compliance',priority:'P0',
+   name:'Caller Identification',
+   desc:'Agent clearly identifies as calling on behalf of the correct program or organization — no misidentification.'},
+  {id:'A3',section:'Call Introduction & Compliance',priority:'P0',
+   name:'Outbound Disclosure (OBD)',
+   desc:'Agent provides the required outbound disclosure statement where applicable per program policy.'},
+  {id:'A4',section:'Call Introduction & Compliance',priority:'P0',
+   name:'Callback Number Accuracy',
+   desc:'If a callback number is provided, it matches the program\'s official number.'},
+
+  // --- Section B: Medication Handling (P0) ---
+  {id:'B1',section:'Medication Handling',priority:'P0',
+   name:'Drug Name Pronunciation',
+   desc:'Medication names are pronounced clearly and correctly during the call.'},
+  {id:'B2',section:'Medication Handling',priority:'P0',
+   name:'Drug Name Documentation',
+   desc:'Medication names are spelled correctly in all output documentation — no typos or truncations.'},
+  {id:'B3',section:'Medication Handling',priority:'P0',
+   name:'No System Artifacts in Drug Name',
+   desc:'No system tags, codes, or metadata appended to the medication name in speech or documentation.'},
+
+  // --- Section C: Information Accuracy (P0) ---
+  {id:'C1',section:'Information Accuracy',priority:'P0',
+   name:'No Fabricated Information',
+   desc:'Agent does not confirm or generate benefit details not stated by the payer. No unverified data in output.'},
+  {id:'C2',section:'Information Accuracy',priority:'P0',
+   name:'Call Completion Accuracy',
+   desc:'Agent does not declare the call complete while required benefit fields are still missing. Disposition reflects actual state.'},
+  {id:'C3',section:'Information Accuracy',priority:'P0',
+   name:'Benefits Output Accuracy',
+   desc:'All documented fields (effective/term dates, phone numbers, PA requirements, copay, appeal info) match what the payer stated.'},
+
+  // --- Section D: Communication Quality (P1) ---
+  {id:'D1',section:'Communication Quality',priority:'P1',
+   name:'No Overtalk / Communication Lag',
+   desc:'Agent does not speak over the payer representative. No excessive delays causing crosstalk or missed information.'},
+  {id:'D2',section:'Communication Quality',priority:'P1',
+   name:'Professional Language & Tone',
+   desc:'Agent maintains a professional tone throughout the call. Language is clear, courteous, and appropriate.'},
+  {id:'D3',section:'Communication Quality',priority:'P1',
+   name:'No Background Noise / Professional Environment',
+   desc:'No audible distractions during the call — background noise, interruptions, or environmental issues.'},
+  {id:'D4',section:'Communication Quality',priority:'P1',
+   name:'No Fillers or Informal Language',
+   desc:'Agent avoids casual fillers and informal language ("yeah", "uh-huh", "like", "you know"). Uses "yes", "understood", "correct" instead.'},
+
+  // --- Section E: Member Verification & Data (P1) ---
+  {id:'E1',section:'Member Verification & Data',priority:'P1',
+   name:'Verification Sequence',
+   desc:'Agent follows the standard payer authentication flow — provides patient name and DOB first, then member ID when requested.'},
+  {id:'E2',section:'Member Verification & Data',priority:'P1',
+   name:'Patient Data Accuracy',
+   desc:'Member identifiers (ID, DOB, zip code, phone) match payer records. No mismatches blocking authentication.'},
+
+  // --- Section F: Call Efficiency & Process (P2) ---
+  {id:'F1',section:'Call Efficiency & Process',priority:'P2',
+   name:'Within Max Attempt Policy',
+   desc:'Total call attempts for this case are within the allowed maximum. Excessive calls risk payer blocking or flagging.'},
+  {id:'F2',section:'Call Efficiency & Process',priority:'P2',
+   name:'IVR Navigation',
+   desc:'Agent successfully navigated the payer\'s IVR/phone tree to reach a live representative. No hang-ups or misroutes.'},
+  {id:'F3',section:'Call Efficiency & Process',priority:'P2',
+   name:'Correct Disposition',
+   desc:'Case disposition accurately reflects the call outcome (complete, incomplete, needs follow-up, etc.).'}
+];
+
+const DEFAULT_AI_CHECKS = [
+  {id:'S1',section:'Script & Prompt Compliance',priority:'Blocker',
+   name:'Call Introduction Matches Approved Script',
+   desc:'AI agent\'s opening statement matches the client-approved call script — program name, caller ID, OBD.'},
+  {id:'S2',section:'Script & Prompt Compliance',priority:'Blocker',
+   name:'Program Name Correctly Configured',
+   desc:'Program name is correctly templated in the agent prompt. Verified across multiple test calls.'},
+  {id:'S3',section:'Script & Prompt Compliance',priority:'Blocker',
+   name:'Caller Identification Language Verified',
+   desc:'Agent says "calling on behalf of [Program]" — not "on behalf of provider" or any incorrect entity.'},
+  {id:'S4',section:'Script & Prompt Compliance',priority:'Blocker',
+   name:'Callback Number Verified',
+   desc:'Callback number in agent config matches the program\'s official callback line. Tested in live call.'},
+  {id:'S5',section:'Script & Prompt Compliance',priority:'Blocker',
+   name:'Drug Names in Pronunciation Dictionary',
+   desc:'All drug names have been added to the TTS pronunciation dictionary with phonetic spellings. Multi-word names tested.'},
+  {id:'S6',section:'Script & Prompt Compliance',priority:'Blocker',
+   name:'No System Artifacts in Drug Name Rendering',
+   desc:'Drug name rendering verified — no system tags or metadata appended to drug names in speech or output.'},
+  {id:'V1',section:'Conversation & Voice Quality',priority:'Blocker',
+   name:'Response Latency ≤ 2s (P95)',
+   desc:'95th percentile response latency is under 2 seconds. Measured across test call set.'},
+  {id:'V2',section:'Conversation & Voice Quality',priority:'Blocker',
+   name:'VAD Tuned — No Overtalk',
+   desc:'VAD thresholds tuned so agent does not speak over the payer rep. Tested with varied payer speech patterns.'},
+  {id:'V3',section:'Conversation & Voice Quality',priority:'Warning',
+   name:'Interruption Handling Tested',
+   desc:'Agent gracefully handles being interrupted mid-sentence — stops, listens, and resumes appropriately.'},
+  {id:'V4',section:'Conversation & Voice Quality',priority:'Warning',
+   name:'End-of-Turn Detection Accurate',
+   desc:'Agent correctly detects when the payer has finished speaking. No premature responses or excessive waits.'},
+  {id:'T1',section:'Benefits Data Extraction',priority:'Blocker',
+   name:'All Mandatory Fields in Question Template',
+   desc:'Agent\'s question template includes every field from the program\'s benefits form. No missing fields.'},
+  {id:'T2',section:'Benefits Data Extraction',priority:'Blocker',
+   name:'Entity Extraction Accuracy ≥ 95%',
+   desc:'Agent correctly extracts ≥95% of stated entities (dates, names, IDs, phone numbers, amounts) on labeled test set.'},
+  {id:'T3',section:'Benefits Data Extraction',priority:'Blocker',
+   name:'Drug Name Correct in Output',
+   desc:'Drug name appears correctly in all output fields — no typos, no system tags, no truncation.'},
+  {id:'T4',section:'Benefits Data Extraction',priority:'Warning',
+   name:'Verification Sequence Matches Standard Flow',
+   desc:'Agent follows standard payer verification sequence (name → DOB → member ID) and does not volunteer info prematurely.'},
+  {id:'E1',section:'Edge Cases & Safety',priority:'Blocker',
+   name:'No Hallucination on Empty/Partial Data',
+   desc:'Agent does not fabricate or present unverified information as confirmed when data is missing.'},
+  {id:'E2',section:'Edge Cases & Safety',priority:'Blocker',
+   name:'AI Detection — Graceful Handling',
+   desc:'When payer asks "Are you AI?" or requests a human, agent responds professionally and follows escalation path.'},
+  {id:'E3',section:'Edge Cases & Safety',priority:'Blocker',
+   name:'Human Transfer Path Working',
+   desc:'Transfer-to-human mechanism is tested and functional. Agent hands off with context when escalation is triggered.'},
+  {id:'E4',section:'Edge Cases & Safety',priority:'Blocker',
+   name:'Max Attempt Guardrail Configured',
+   desc:'System enforces the max call attempt limit. After limit, case auto-escalates to human queue.'},
+  {id:'E5',section:'Edge Cases & Safety',priority:'Warning',
+   name:'IVR Navigation Tested for Top Payers',
+   desc:'Agent navigates IVR trees for top payers by volume. Edge cases (member ID format, DTMF vs. speech) verified.'},
+  {id:'E6',section:'Edge Cases & Safety',priority:'Warning',
+   name:'Prior Call Context Handling',
+   desc:'When resuming a case with prior call data, agent distinguishes between previously collected and new info.'},
+  {id:'E7',section:'Edge Cases & Safety',priority:'Warning',
+   name:'Disposition Logic Correct',
+   desc:'Agent sets disposition accurately based on what was collected vs. required. No false "complete" on partial data.'}
+];
+
+const DEFAULT_SETTINGS = {
+  programs: ['Ipsen', 'SMPA Orgovyx'],
+  passThreshold: 80,
+  weights: { P0: 3, P1: 2, P2: 1 }
+};
+
+const CONFIG_VERSION = 2;
+
+// ===== ACTIVE CONFIG =====
+let activeQAChecks = [];
+let activeAIChecks = [];
+let activeSettings = {};
+
+// ===== UTILITY =====
+function deepClone(obj){ return JSON.parse(JSON.stringify(obj)); }
+function escAttr(s){ return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function escHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ===== CONFIG MANAGEMENT =====
+function loadConfig(){
+  const saved = localStorage.getItem('scorecard_config');
+  if(saved){
+    try {
+      const cfg = JSON.parse(saved);
+      if(cfg.version === CONFIG_VERSION){
+        activeQAChecks = cfg.qaChecks && cfg.qaChecks.length ? cfg.qaChecks : deepClone(DEFAULT_QA_CHECKS);
+        activeAIChecks = cfg.aiChecks && cfg.aiChecks.length ? cfg.aiChecks : deepClone(DEFAULT_AI_CHECKS);
+        activeSettings = cfg.settings && cfg.settings.programs ? cfg.settings : deepClone(DEFAULT_SETTINGS);
+        return;
+      }
+    } catch(e){}
+  }
+  activeQAChecks = deepClone(DEFAULT_QA_CHECKS);
+  activeAIChecks = deepClone(DEFAULT_AI_CHECKS);
+  activeSettings = deepClone(DEFAULT_SETTINGS);
+}
+
+function saveConfigToLocalStorage(){
+  localStorage.setItem('scorecard_config', JSON.stringify({
+    version: CONFIG_VERSION,
+    qaChecks: activeQAChecks,
+    aiChecks: activeAIChecks,
+    settings: activeSettings
+  }));
+}
+
+function renderAll(){
+  populateProgramDropdowns();
+  renderChecks();
+  renderAIChecks();
+  renderAdminQAChecks();
+  renderAdminAIChecks();
+  renderAdminSettings();
+  updateSyncTimestamp();
+}
+
+// ===== DYNAMIC PROGRAM DROPDOWNS =====
+function populateProgramDropdowns(){
+  ['meta-program','ai-program'].forEach(id => {
+    const sel = document.getElementById(id);
+    const current = sel.value;
+    sel.innerHTML = '<option value="">Select...</option>';
+    activeSettings.programs.forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p; opt.textContent = p;
+      sel.appendChild(opt);
+    });
+    const other = document.createElement('option');
+    other.value = '__other__'; other.textContent = 'Other...';
+    sel.appendChild(other);
+    if(current && current !== '__other__') sel.value = current;
+  });
+}
+
+function onProgramSelect(selId){
+  const sel = document.getElementById(selId);
+  const otherInput = document.getElementById(selId + '-other');
+  otherInput.style.display = sel.value === '__other__' ? 'block' : 'none';
+}
+
+function getProgramValue(selId){
+  const sel = document.getElementById(selId);
+  if(sel.value === '__other__') return document.getElementById(selId + '-other').value.trim();
+  return sel.value;
+}
+
+// ===== RENDER: QA CHECKS (Score-Based 1–5) =====
+function renderChecks(){
+  const tbody = document.getElementById('check-body');
+  let html = '', lastSection = '';
+  activeQAChecks.forEach(c => {
+    if(c.section !== lastSection){
+      html += `<tr><td colspan="5" style="padding:12px 10px 6px;font-weight:700;font-size:.85rem;color:var(--dark);background:#f8fafc;border-bottom:2px solid var(--border)">${escHtml(c.section)} <span class="badge badge-${c.priority.toLowerCase()}">${escHtml(c.priority)}</span></td></tr>`;
+      lastSection = c.section;
+    }
+    html += `<tr>
+      <td class="num">${escHtml(c.id)}</td>
+      <td class="priority"><span class="badge badge-${c.priority.toLowerCase()}">${escHtml(c.priority)}</span></td>
+      <td class="check-name"><b>${escHtml(c.name)}</b><div class="check-desc">${escHtml(c.desc)}</div></td>
+      <td class="verdict-col"><select id="chk-${escAttr(c.id)}" onchange="onCheckChange(this)">
+        <option value="">—</option>
+        <option value="5">5 - Excellent</option>
+        <option value="4">4 - Good</option>
+        <option value="3">3 - Acceptable</option>
+        <option value="2">2 - Needs Work</option>
+        <option value="1">1 - Poor</option>
+        <option value="NA">N/A</option>
+      </select></td>
+      <td class="notes-col"><input type="text" id="note-${escAttr(c.id)}" placeholder="Optional notes..."></td>
+    </tr>`;
+  });
+  tbody.innerHTML = html;
+}
+
+// ===== RENDER: AI CHECKS (Pass/Fail — Go/No-Go) =====
+function renderAIChecks(){
+  const tbody = document.getElementById('ai-check-body');
+  let html = '', lastSection = '';
+  activeAIChecks.forEach(c => {
+    if(c.section !== lastSection){
+      html += `<tr><td colspan="5" style="padding:12px 10px 6px;font-weight:700;font-size:.85rem;color:var(--dark);background:#f8fafc;border-bottom:2px solid var(--border)">${escHtml(c.section)}</td></tr>`;
+      lastSection = c.section;
+    }
+    const badgeClass = c.priority === 'Blocker' ? 'badge-p0' : 'badge-p1';
+    html += `<tr>
+      <td class="num">${escHtml(c.id)}</td>
+      <td class="priority"><span class="badge ${badgeClass}">${escHtml(c.priority)}</span></td>
+      <td class="check-name"><b>${escHtml(c.name)}</b><div class="check-desc">${escHtml(c.desc)}</div></td>
+      <td class="verdict-col"><select id="ai-chk-${escAttr(c.id)}" onchange="onAICheckChange(this)"><option value="">—</option><option value="Pass">Pass</option><option value="Fail">Fail</option><option value="NA">N/A</option></select></td>
+      <td class="notes-col"><input type="text" id="ai-note-${escAttr(c.id)}" placeholder="Optional notes..."></td>
+    </tr>`;
+  });
+  tbody.innerHTML = html;
+}
+
+// ===== SCORING: QA (Score-Based) =====
+function onCheckChange(el){
+  const v = el.value;
+  if(v === '') el.className = '';
+  else if(v === 'NA') el.className = 'result-na';
+  else if(Number(v) >= 4) el.className = 'result-high';
+  else if(Number(v) >= 3) el.className = 'result-mid';
+  else el.className = 'result-low';
+  recalcScore();
+}
+
+function recalcScore(){
+  const weights = activeSettings.weights || {P0:3,P1:2,P2:1};
+  const threshold = activeSettings.passThreshold || 80;
+  const maxScorePerCheck = 5;
+  let totalMaxWeight=0, earnedWeight=0, answered=0;
+  let p0Total=0,p0Count=0,p1Total=0,p1Count=0,p2Total=0,p2Count=0;
+
+  activeQAChecks.forEach(c => {
+    const el = document.getElementById('chk-'+c.id);
+    if(!el) return;
+    const v = el.value;
+    if(!v) return;
+    answered++;
+    if(v === 'NA') return;
+    const score = Number(v);
+    const w = weights[c.priority] || 1;
+    totalMaxWeight += maxScorePerCheck * w;
+    earnedWeight += score * w;
+    if(c.priority==='P0'){p0Total+=score;p0Count++;}
+    else if(c.priority==='P1'){p1Total+=score;p1Count++;}
+    else{p2Total+=score;p2Count++;}
+  });
+
+  const panel = document.getElementById('score-panel');
+  const circle = document.getElementById('score-circle');
+  const verdict = document.getElementById('score-verdict');
+  const summary = document.getElementById('score-summary');
+  const breakdown = document.getElementById('score-breakdown');
+
+  if(answered < activeQAChecks.length){
+    panel.className = 'score-panel pending-bg';
+    circle.className = 'score-circle pending';
+    circle.textContent = answered + '/' + activeQAChecks.length;
+    verdict.textContent = 'In Progress — ' + (activeQAChecks.length - answered) + ' checks remaining';
+    summary.textContent = 'Rate all checks to see the final verdict.';
+    breakdown.innerHTML = '';
+    return;
+  }
+
+  const pct = totalMaxWeight > 0 ? Math.round((earnedWeight/totalMaxWeight)*100) : 100;
+  const isSuccessful = pct >= threshold;
+  const p0Avg = p0Count > 0 ? (p0Total/p0Count).toFixed(1) : '—';
+  const p1Avg = p1Count > 0 ? (p1Total/p1Count).toFixed(1) : '—';
+  const p2Avg = p2Count > 0 ? (p2Total/p2Count).toFixed(1) : '—';
+
+  circle.textContent = pct + '%';
+  if(isSuccessful){
+    panel.className = 'score-panel pass-bg';
+    circle.className = 'score-circle pass';
+    verdict.textContent = 'SUCCESSFUL — Call Approved';
+    summary.textContent = 'Weighted score meets the ' + threshold + '% threshold.';
+  } else {
+    panel.className = 'score-panel fail-bg';
+    circle.className = 'score-circle fail';
+    verdict.textContent = 'FAIL — Score Below ' + threshold + '%';
+    summary.textContent = 'Weighted score (' + pct + '%) is below the ' + threshold + '% threshold. Review low-scoring items.';
+  }
+  breakdown.innerHTML = `
+    <div class="metric"><span>${pct}%</span>Overall</div>
+    <div class="metric"><span>${p0Avg}</span>P0 Avg</div>
+    <div class="metric"><span>${p1Avg}</span>P1 Avg</div>
+    <div class="metric"><span>${p2Avg}</span>P2 Avg</div>
+  `;
+}
+
+// ===== SCORING: AI (Pass/Fail Go/No-Go) =====
+function onAICheckChange(el){
+  el.className = el.value === 'Pass' ? 'result-pass' : el.value === 'Fail' ? 'result-fail' : el.value === 'NA' ? 'result-na' : '';
+  recalcAIScore();
+}
+
+function recalcAIScore(){
+  let answered=0, blockerFails=0, warningFails=0;
+  activeAIChecks.forEach(c => {
+    const el = document.getElementById('ai-chk-'+c.id);
+    if(!el) return;
+    const v = el.value;
+    if(v) answered++;
+    if(c.priority==='Blocker' && v==='Fail') blockerFails++;
+    if(c.priority==='Warning' && v==='Fail') warningFails++;
+  });
+  const panel = document.getElementById('ai-score-panel');
+  const circle = document.getElementById('ai-score-circle');
+  const verdict = document.getElementById('ai-score-verdict');
+  const summary = document.getElementById('ai-score-summary');
+
+  if(answered < activeAIChecks.length){
+    panel.className='score-panel pending-bg'; circle.className='score-circle pending';
+    circle.textContent = answered+'/'+activeAIChecks.length;
+    verdict.textContent = 'In Progress — '+(activeAIChecks.length-answered)+' checks remaining';
+    return;
+  }
+  if(blockerFails===0){
+    panel.className='score-panel pass-bg'; circle.className='score-circle pass';
+    circle.textContent='GO';
+    verdict.textContent='GO FOR LAUNCH — All Blockers Passed';
+    summary.textContent = warningFails>0 ? warningFails+' warning(s) noted — track but non-blocking.' : 'All checks passed. Agent is ready for shadow runs.';
+  } else {
+    panel.className='score-panel fail-bg'; circle.className='score-circle fail';
+    circle.textContent='NO-GO';
+    verdict.textContent='NO-GO — '+blockerFails+' Blocker Failure'+(blockerFails>1?'s':'');
+    summary.textContent='Fix all blocker items before proceeding to shadow runs.';
+  }
+}
+
+// ===== SUBMISSION =====
+function getCheckValues(){
+  const row = {};
+  activeQAChecks.forEach(c => {
+    const chkEl = document.getElementById('chk-'+c.id);
+    const noteEl = document.getElementById('note-'+c.id);
+    row['chk_'+c.id] = chkEl ? chkEl.value : '';
+    row['note_'+c.id] = noteEl ? noteEl.value : '';
+  });
+  return row;
+}
+
+function getMetaValues(){
+  return {
+    program: getProgramValue('meta-program'),
+    refId: document.getElementById('meta-refid').value,
+    caseId: document.getElementById('meta-caseid').value,
+    callType: document.getElementById('meta-calltype').value,
+    callNum: document.getElementById('meta-callnum').value,
+    payer: document.getElementById('meta-payer').value,
+    callDate: document.getElementById('meta-calldate').value,
+    evaluator: document.getElementById('meta-evaluator').value
+  };
+}
+
+function computeVerdict(){
+  const weights = activeSettings.weights || {P0:3,P1:2,P2:1};
+  const threshold = activeSettings.passThreshold || 80;
+  let totalMax=0, earned=0;
+  activeQAChecks.forEach(c => {
+    const el = document.getElementById('chk-'+c.id);
+    if(!el) return;
+    const v = el.value;
+    if(!v || v==='NA') return;
+    const w = weights[c.priority] || 1;
+    totalMax += 5 * w;
+    earned += Number(v) * w;
+  });
+  const pct = totalMax>0 ? Math.round((earned/totalMax)*100) : 0;
+  return {pct, pass: pct >= threshold};
+}
+
+function submitScorecard(){
+  const meta = getMetaValues();
+  if(!meta.program || !meta.refId){showToast('Please fill in at least Program and Reference ID');return;}
+  const unanswered = activeQAChecks.filter(c => {
+    const el = document.getElementById('chk-'+c.id);
+    return !el || !el.value;
+  });
+  if(unanswered.length > 0){showToast(unanswered.length + ' checks still unscored');return;}
+
+  const checks = getCheckValues();
+  const {pct, pass} = computeVerdict();
+  const entry = {
+    timestamp: new Date().toISOString(),
+    ...meta,
+    score: pct,
+    verdict: pass ? 'Successful' : 'Fail',
+    checks
+  };
+
+  const log = JSON.parse(localStorage.getItem('qa_log') || '[]');
+  log.push(entry);
+  localStorage.setItem('qa_log', JSON.stringify(log));
+  pushToGSheet(entry, 'QA Submissions');
+  showToast('Scorecard submitted! Verdict: ' + entry.verdict + ' (' + pct + '%)');
+  renderLog();
+}
+
+function submitAIChecklist(){
+  const program = getProgramValue('ai-program');
+  const version = document.getElementById('ai-version').value;
+  const tester = document.getElementById('ai-tester').value;
+  const testdate = document.getElementById('ai-testdate').value;
+  const testcalls = document.getElementById('ai-testcalls').value;
+  const payers = document.getElementById('ai-payers').value;
+  if(!program || !version){showToast('Please fill Program and Agent Version');return;}
+  const unanswered = activeAIChecks.filter(c => {
+    const el = document.getElementById('ai-chk-'+c.id);
+    return !el || !el.value;
+  });
+  if(unanswered.length>0){showToast(unanswered.length+' checks still unanswered');return;}
+
+  let blockerFails=0, warningFails=0;
+  const checks = {};
+  activeAIChecks.forEach(c => {
+    const chkEl = document.getElementById('ai-chk-'+c.id);
+    const noteEl = document.getElementById('ai-note-'+c.id);
+    checks['chk_'+c.id] = chkEl ? chkEl.value : '';
+    checks['note_'+c.id] = noteEl ? noteEl.value : '';
+    if(chkEl && chkEl.value==='Fail'){
+      if(c.priority==='Blocker') blockerFails++; else warningFails++;
+    }
+  });
+
+  const entry = {
+    timestamp: new Date().toISOString(),
+    program, version, tester, testdate, testcalls, payers,
+    blockerFails, warningFails,
+    verdict: blockerFails===0 ? 'GO' : 'NO-GO',
+    checks
+  };
+  const log = JSON.parse(localStorage.getItem('ai_log') || '[]');
+  log.push(entry);
+  localStorage.setItem('ai_log', JSON.stringify(log));
+  pushToGSheet(entry, 'AI Submissions');
+  showToast('AI Checklist submitted! Verdict: '+entry.verdict);
+  renderAILog();
+}
+
+// ===== LOG RENDERING =====
+function renderLog(){
+  const log = JSON.parse(localStorage.getItem('qa_log') || '[]');
+  const tbody = document.getElementById('log-body');
+  if(log.length === 0){
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--light)">No submissions yet</td></tr>';
+    return;
+  }
+  tbody.innerHTML = log.map((e,i) => `<tr>
+    <td>${new Date(e.timestamp).toLocaleDateString()}</td>
+    <td>${escHtml(e.program)}</td>
+    <td>${escHtml(e.refId)}</td>
+    <td>${escHtml(e.callType)}</td>
+    <td>${escHtml(e.payer)}</td>
+    <td>${e.score}%</td>
+    <td class="${e.verdict==='Successful'?'verdict-pass':'verdict-fail'}">${e.verdict}</td>
+    <td>${escHtml(e.evaluator)}</td>
+    <td><button class="btn btn-secondary" style="padding:3px 8px;font-size:.72rem" onclick="deleteLogEntry(${i})">Delete</button></td>
+  </tr>`).join('');
+}
+
+function renderAILog(){
+  const log = JSON.parse(localStorage.getItem('ai_log') || '[]');
+  const tbody = document.getElementById('ai-log-body');
+  if(log.length===0){
+    tbody.innerHTML='<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--light)">No submissions yet</td></tr>';
+    return;
+  }
+  tbody.innerHTML = log.map((e,i) => `<tr>
+    <td>${new Date(e.timestamp).toLocaleDateString()}</td>
+    <td>${escHtml(e.program)}</td>
+    <td>${escHtml(e.version)}</td>
+    <td>${e.testcalls}</td>
+    <td>${e.blockerFails===0?'All Pass':e.blockerFails+' Failed'}</td>
+    <td class="${e.verdict==='GO'?'verdict-pass':'verdict-fail'}">${e.verdict}</td>
+    <td>${escHtml(e.tester)}</td>
+    <td><button class="btn btn-secondary" style="padding:3px 8px;font-size:.72rem" onclick="deleteAILogEntry(${i})">Delete</button></td>
+  </tr>`).join('');
+}
+
+function deleteLogEntry(i){ const log=JSON.parse(localStorage.getItem('qa_log')||'[]'); log.splice(i,1); localStorage.setItem('qa_log',JSON.stringify(log)); renderLog(); }
+function deleteAILogEntry(i){ const log=JSON.parse(localStorage.getItem('ai_log')||'[]'); log.splice(i,1); localStorage.setItem('ai_log',JSON.stringify(log)); renderAILog(); }
+function clearLog(){ if(confirm('Delete ALL QA submissions? This cannot be undone.')){ localStorage.removeItem('qa_log'); renderLog(); showToast('All submissions cleared'); }}
+
+// ===== CSV EXPORT =====
+function buildCSVHeaders(){
+  const headers = ['Timestamp','Program','Reference ID','Case ID','Call Type','Call #','Payer','Call Date','Evaluator','Score (%)','Verdict'];
+  activeQAChecks.forEach(c => headers.push(c.id+': '+c.name));
+  activeQAChecks.forEach(c => headers.push(c.id+' Notes'));
+  return headers;
+}
+function buildCSVRow(entry){
+  const row = [entry.timestamp,entry.program,entry.refId,entry.caseId,entry.callType,entry.callNum,entry.payer,entry.callDate,entry.evaluator,entry.score,entry.verdict];
+  activeQAChecks.forEach(c => row.push(entry.checks['chk_'+c.id]||''));
+  activeQAChecks.forEach(c => row.push(entry.checks['note_'+c.id]||''));
+  return row;
+}
+function escCSV(v){ const s=String(v||''); return s.includes(',')||s.includes('"')||s.includes('\n') ? '"'+s.replace(/"/g,'""')+'"' : s; }
+function toCSVString(headers,rows){ return [headers.map(escCSV).join(','),...rows.map(r=>r.map(escCSV).join(','))].join('\n'); }
+
+function exportSingleCSV(){
+  const meta=getMetaValues(); const checks=getCheckValues(); const {pct,pass}=computeVerdict();
+  const entry={timestamp:new Date().toISOString(),...meta,score:pct,verdict:pass?'Successful':'Fail',checks};
+  downloadCSV(toCSVString(buildCSVHeaders(),[buildCSVRow(entry)]), 'qa_scorecard_'+meta.refId+'_'+new Date().toISOString().slice(0,10)+'.csv');
+}
+function exportAllCSV(){
+  const log=JSON.parse(localStorage.getItem('qa_log')||'[]');
+  if(!log.length){showToast('No submissions to export');return;}
+  downloadCSV(toCSVString(buildCSVHeaders(),log.map(buildCSVRow)), 'qa_submissions_'+new Date().toISOString().slice(0,10)+'.csv');
+}
+function copyAllCSV(){
+  const log=JSON.parse(localStorage.getItem('qa_log')||'[]');
+  if(!log.length){showToast('No submissions to copy');return;}
+  navigator.clipboard.writeText(toCSVString(buildCSVHeaders(),log.map(buildCSVRow))).then(()=>showToast('Copied to clipboard'));
+}
+function copyRowToClipboard(){
+  const meta=getMetaValues(); const checks=getCheckValues(); const {pct,pass}=computeVerdict();
+  const entry={timestamp:new Date().toISOString(),...meta,score:pct,verdict:pass?'Successful':'Fail',checks};
+  navigator.clipboard.writeText(toCSVString(buildCSVHeaders(),[buildCSVRow(entry)])).then(()=>showToast('CSV row copied'));
+}
+
+function buildAICSVHeaders(){
+  const h=['Timestamp','Program','Agent Version','Tester','Test Date','Test Calls','Payers','Blocker Fails','Warning Fails','Verdict'];
+  activeAIChecks.forEach(c=>h.push(c.id+': '+c.name));
+  activeAIChecks.forEach(c=>h.push(c.id+' Notes'));
+  return h;
+}
+function buildAICSVRow(e){
+  const r=[e.timestamp,e.program,e.version,e.tester,e.testdate,e.testcalls,e.payers,e.blockerFails,e.warningFails,e.verdict];
+  activeAIChecks.forEach(c=>r.push(e.checks['chk_'+c.id]||''));
+  activeAIChecks.forEach(c=>r.push(e.checks['note_'+c.id]||''));
+  return r;
+}
+function exportAllAICSV(){
+  const log=JSON.parse(localStorage.getItem('ai_log')||'[]');
+  if(!log.length){showToast('No AI submissions');return;}
+  downloadCSV(toCSVString(buildAICSVHeaders(),log.map(buildAICSVRow)), 'ai_prelive_'+new Date().toISOString().slice(0,10)+'.csv');
+}
+function copyAIRowToClipboard(){
+  const program=getProgramValue('ai-program'),version=document.getElementById('ai-version').value,tester=document.getElementById('ai-tester').value,testdate=document.getElementById('ai-testdate').value,testcalls=document.getElementById('ai-testcalls').value,payers=document.getElementById('ai-payers').value;
+  let bf=0,wf=0; const checks={};
+  activeAIChecks.forEach(c=>{const el=document.getElementById('ai-chk-'+c.id);const n=document.getElementById('ai-note-'+c.id);checks['chk_'+c.id]=el?el.value:'';checks['note_'+c.id]=n?n.value:'';if(el&&el.value==='Fail'){c.priority==='Blocker'?bf++:wf++;}});
+  const entry={timestamp:new Date().toISOString(),program,version,tester,testdate,testcalls,payers,blockerFails:bf,warningFails:wf,verdict:bf===0?'GO':'NO-GO',checks};
+  navigator.clipboard.writeText(toCSVString(buildAICSVHeaders(),[buildAICSVRow(entry)])).then(()=>showToast('AI CSV row copied'));
+}
+function exportAICSV(){
+  const program=getProgramValue('ai-program'),version=document.getElementById('ai-version').value,tester=document.getElementById('ai-tester').value,testdate=document.getElementById('ai-testdate').value,testcalls=document.getElementById('ai-testcalls').value,payers=document.getElementById('ai-payers').value;
+  let bf=0,wf=0; const checks={};
+  activeAIChecks.forEach(c=>{const el=document.getElementById('ai-chk-'+c.id);const n=document.getElementById('ai-note-'+c.id);checks['chk_'+c.id]=el?el.value:'';checks['note_'+c.id]=n?n.value:'';if(el&&el.value==='Fail'){c.priority==='Blocker'?bf++:wf++;}});
+  const entry={timestamp:new Date().toISOString(),program,version,tester,testdate,testcalls,payers,blockerFails:bf,warningFails:wf,verdict:bf===0?'GO':'NO-GO',checks};
+  downloadCSV(toCSVString(buildAICSVHeaders(),[buildAICSVRow(entry)]),'ai_checklist_'+program+'_'+new Date().toISOString().slice(0,10)+'.csv');
+}
+function downloadCSV(csv,filename){ const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'})); a.download=filename; a.click(); }
+
+// ===== GOOGLE SHEET =====
+function saveGSheetURL(){
+  const url=document.getElementById('gsheet-url').value.trim();
+  if(!url){showToast('Please enter a URL');return;}
+  localStorage.setItem('gsheet_url',url);
+  document.getElementById('gsheet-status').style.display='block';
+  showToast('Google Sheet URL saved');
+}
+function testGSheetConnection(){
+  const url=localStorage.getItem('gsheet_url');
+  if(!url){showToast('Save a URL first');return;}
+  showToast('Testing connection...');
+  fetch(url).then(r=>r.json()).then(d=>{ showToast(d.status==='ready'?'Connection successful!':'Connected but unexpected response'); }).catch(e=>showToast('Connection failed: '+e.message));
+}
+function pushToGSheet(entry,sheetName){
+  const url=localStorage.getItem('gsheet_url');
+  if(!url) return;
+  const isAI=sheetName==='AI Submissions';
+  fetch(url,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({headers:isAI?buildAICSVHeaders():buildCSVHeaders(),row:isAI?buildAICSVRow(entry):buildCSVRow(entry),sheetName})}).catch(e=>console.warn('GSheet push failed:',e));
+}
+
+// ===== RESET =====
+function resetForm(){
+  activeQAChecks.forEach(c=>{const el=document.getElementById('chk-'+c.id);const n=document.getElementById('note-'+c.id);if(el){el.value='';el.className='';}if(n)n.value='';});
+  ['meta-program','meta-refid','meta-caseid','meta-calltype','meta-callnum','meta-payer','meta-calldate','meta-evaluator'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('meta-program-other').style.display='none';
+  document.getElementById('meta-program-other').value='';
+  recalcScore();showToast('Form reset');
+}
+function resetAIForm(){
+  activeAIChecks.forEach(c=>{const el=document.getElementById('ai-chk-'+c.id);const n=document.getElementById('ai-note-'+c.id);if(el){el.value='';el.className='';}if(n)n.value='';});
+  ['ai-program','ai-version','ai-tester','ai-testdate','ai-testcalls','ai-payers'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('ai-program-other').style.display='none';
+  document.getElementById('ai-program-other').value='';
+  recalcAIScore();
+}
+
+// ===== TABS =====
+function switchTab(tab){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  const tabMap={'scorecard':0,'ai-prelive':1,'submissions':2,'gsheet':3,'admin':4};
+  document.querySelectorAll('.tab')[tabMap[tab]].classList.add('active');
+  if(tab==='submissions'){renderLog();renderAILog();}
+  if(tab==='admin'){renderAdminQAChecks();renderAdminAIChecks();renderAdminSettings();}
+}
+
+// ===== TOAST =====
+function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500); }
+
+// ===== COLLAPSE =====
+function toggleCollapse(id){ const b=document.getElementById(id); const a=document.getElementById(id+'-arrow'); b.classList.toggle('open'); a.textContent=b.classList.contains('open')?'▼':'▶'; }
+
+function copyGASCode(){ navigator.clipboard.writeText(document.getElementById('gas-script').textContent).then(()=>showToast('Apps Script code copied')); }
+
+// ===== ADMIN: QA CHECKS =====
+function readAdminQAInputs(){
+  const rows=document.getElementById('admin-qa-body').querySelectorAll('tr');
+  rows.forEach((row,i)=>{if(i>=activeQAChecks.length)return;const f=field=>row.querySelector('[data-field="'+field+'"]');
+    if(f('id'))activeQAChecks[i].id=f('id').value;if(f('section'))activeQAChecks[i].section=f('section').value;
+    if(f('priority'))activeQAChecks[i].priority=f('priority').value;if(f('name'))activeQAChecks[i].name=f('name').value;if(f('desc'))activeQAChecks[i].desc=f('desc').value;});
+}
+function renderAdminQAChecks(){
+  const tbody=document.getElementById('admin-qa-body'); let html='';
+  activeQAChecks.forEach((c,i)=>{
+    html+=`<tr><td class="num">${i+1}</td>
+      <td><input type="text" data-field="id" value="${escAttr(c.id)}"></td>
+      <td><input type="text" data-field="section" value="${escAttr(c.section)}"></td>
+      <td><select data-field="priority"><option value="P0" ${c.priority==='P0'?'selected':''}>P0</option><option value="P1" ${c.priority==='P1'?'selected':''}>P1</option><option value="P2" ${c.priority==='P2'?'selected':''}>P2</option></select></td>
+      <td><input type="text" data-field="name" value="${escAttr(c.name)}"></td>
+      <td><textarea data-field="desc">${escHtml(c.desc)}</textarea></td>
+      <td class="admin-actions"><button onclick="moveQACheck(${i},-1)" ${i===0?'disabled':''}>↑</button><button onclick="moveQACheck(${i},1)" ${i===activeQAChecks.length-1?'disabled':''}>↓</button><button class="del" onclick="deleteQACheck(${i})">×</button></td></tr>`;
+  }); tbody.innerHTML=html;
+}
+function addQACheck(){readAdminQAInputs();activeQAChecks.push({id:'NEW'+(activeQAChecks.length+1),section:'',priority:'P1',name:'New Check',desc:''});saveConfigToLocalStorage();renderAdminQAChecks();showToast('QA check added');}
+function deleteQACheck(i){if(!confirm('Delete "'+activeQAChecks[i].name+'"?'))return;readAdminQAInputs();activeQAChecks.splice(i,1);saveConfigToLocalStorage();renderAdminQAChecks();renderChecks();showToast('Deleted');}
+function moveQACheck(i,d){readAdminQAInputs();const j=i+d;if(j<0||j>=activeQAChecks.length)return;[activeQAChecks[i],activeQAChecks[j]]=[activeQAChecks[j],activeQAChecks[i]];saveConfigToLocalStorage();renderAdminQAChecks();}
+function applyQAChanges(){readAdminQAInputs();saveConfigToLocalStorage();renderChecks();recalcScore();showToast('QA checks saved');}
+function resetQAToDefaults(){if(!confirm('Reset all QA checks to defaults?'))return;activeQAChecks=deepClone(DEFAULT_QA_CHECKS);saveConfigToLocalStorage();renderAdminQAChecks();renderChecks();showToast('Reset to defaults');}
+
+// ===== ADMIN: AI CHECKS =====
+function readAdminAIInputs(){
+  const rows=document.getElementById('admin-ai-body').querySelectorAll('tr');
+  rows.forEach((row,i)=>{if(i>=activeAIChecks.length)return;const f=field=>row.querySelector('[data-field="'+field+'"]');
+    if(f('id'))activeAIChecks[i].id=f('id').value;if(f('section'))activeAIChecks[i].section=f('section').value;
+    if(f('priority'))activeAIChecks[i].priority=f('priority').value;if(f('name'))activeAIChecks[i].name=f('name').value;if(f('desc'))activeAIChecks[i].desc=f('desc').value;});
+}
+function renderAdminAIChecks(){
+  const tbody=document.getElementById('admin-ai-body'); let html='';
+  activeAIChecks.forEach((c,i)=>{
+    html+=`<tr><td class="num">${i+1}</td>
+      <td><input type="text" data-field="id" value="${escAttr(c.id)}"></td>
+      <td><input type="text" data-field="section" value="${escAttr(c.section)}"></td>
+      <td><select data-field="priority"><option value="Blocker" ${c.priority==='Blocker'?'selected':''}>Blocker</option><option value="Warning" ${c.priority==='Warning'?'selected':''}>Warning</option></select></td>
+      <td><input type="text" data-field="name" value="${escAttr(c.name)}"></td>
+      <td><textarea data-field="desc">${escHtml(c.desc)}</textarea></td>
+      <td class="admin-actions"><button onclick="moveAICheck(${i},-1)" ${i===0?'disabled':''}>↑</button><button onclick="moveAICheck(${i},1)" ${i===activeAIChecks.length-1?'disabled':''}>↓</button><button class="del" onclick="deleteAICheck(${i})">×</button></td></tr>`;
+  }); tbody.innerHTML=html;
+}
+function addAICheck(){readAdminAIInputs();activeAIChecks.push({id:'NEW'+(activeAIChecks.length+1),section:'',priority:'Blocker',name:'New Check',desc:''});saveConfigToLocalStorage();renderAdminAIChecks();showToast('AI check added');}
+function deleteAICheck(i){if(!confirm('Delete "'+activeAIChecks[i].name+'"?'))return;readAdminAIInputs();activeAIChecks.splice(i,1);saveConfigToLocalStorage();renderAdminAIChecks();renderAIChecks();showToast('Deleted');}
+function moveAICheck(i,d){readAdminAIInputs();const j=i+d;if(j<0||j>=activeAIChecks.length)return;[activeAIChecks[i],activeAIChecks[j]]=[activeAIChecks[j],activeAIChecks[i]];saveConfigToLocalStorage();renderAdminAIChecks();}
+function applyAIChanges(){readAdminAIInputs();saveConfigToLocalStorage();renderAIChecks();recalcAIScore();showToast('AI checks saved');}
+function resetAIToDefaults(){if(!confirm('Reset all AI checks to defaults?'))return;activeAIChecks=deepClone(DEFAULT_AI_CHECKS);saveConfigToLocalStorage();renderAdminAIChecks();renderAIChecks();showToast('Reset to defaults');}
+
+// ===== ADMIN: SETTINGS =====
+function renderAdminSettings(){
+  document.getElementById('programs-chips').innerHTML=activeSettings.programs.map((p,i)=>`<span class="chip">${escHtml(p)}<span class="chip-x" onclick="removeProgram(${i})">&times;</span></span>`).join('');
+  document.getElementById('setting-threshold').value=activeSettings.passThreshold||80;
+  document.getElementById('setting-w-p0').value=(activeSettings.weights||{}).P0||3;
+  document.getElementById('setting-w-p1').value=(activeSettings.weights||{}).P1||2;
+  document.getElementById('setting-w-p2').value=(activeSettings.weights||{}).P2||1;
+}
+function addProgram(){const input=document.getElementById('new-program-input');const name=input.value.trim();if(!name){showToast('Enter a program name');return;}if(activeSettings.programs.includes(name)){showToast('Already exists');return;}activeSettings.programs.push(name);input.value='';saveConfigToLocalStorage();renderAdminSettings();populateProgramDropdowns();showToast('Program added');}
+function removeProgram(i){const name=activeSettings.programs[i];if(!confirm('Remove "'+name+'"?'))return;activeSettings.programs.splice(i,1);saveConfigToLocalStorage();renderAdminSettings();populateProgramDropdowns();showToast('Removed');}
+function applySettings(){activeSettings.passThreshold=Number(document.getElementById('setting-threshold').value)||80;activeSettings.weights={P0:Number(document.getElementById('setting-w-p0').value)||3,P1:Number(document.getElementById('setting-w-p1').value)||2,P2:Number(document.getElementById('setting-w-p2').value)||1};saveConfigToLocalStorage();recalcScore();showToast('Settings applied');}
+
+// ===== ADMIN: SYNC =====
+function updateSyncTimestamp(){const ts=localStorage.getItem('last_config_sync');document.getElementById('sync-status').textContent=ts?'Last synced: '+ts:'Last synced: Never';}
+function saveConfigToGSheet(){
+  const url=localStorage.getItem('gsheet_url');if(!url){showToast('No Google Sheet URL configured');return;}
+  readAdminQAInputs();readAdminAIInputs();
+  fetch(url,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'saveConfig',qaChecks:activeQAChecks,aiChecks:activeAIChecks,settings:activeSettings})})
+  .then(()=>{const now=new Date().toLocaleString();localStorage.setItem('last_config_sync',now);updateSyncTimestamp();showToast('Config sent to Google Sheet');})
+  .catch(e=>showToast('Failed: '+e.message));
+}
+function loadConfigFromGSheet(silent){
+  const url=localStorage.getItem('gsheet_url');if(!url){if(!silent)showToast('No Google Sheet URL configured');return;}
+  if(!silent)showToast('Loading config...');
+  fetch(url+(url.includes('?')?'&':'?')+'action=getConfig').then(r=>r.json()).then(data=>{
+    if(data.qaChecks&&data.qaChecks.length>0)activeQAChecks=data.qaChecks;
+    if(data.aiChecks&&data.aiChecks.length>0)activeAIChecks=data.aiChecks;
+    if(data.settings&&data.settings.programs&&data.settings.programs.length>0)activeSettings=data.settings;
+    saveConfigToLocalStorage();renderAll();
+    const now=new Date().toLocaleString();localStorage.setItem('last_config_sync',now);updateSyncTimestamp();
+    if(!silent)showToast('Config loaded from Google Sheet');
+  }).catch(e=>{console.warn('GSheet config load failed:',e);if(!silent)showToast('Failed to load config');});
+}
+function exportConfigJSON(){
+  readAdminQAInputs();readAdminAIInputs();
+  const blob=new Blob([JSON.stringify({qaChecks:activeQAChecks,aiChecks:activeAIChecks,settings:activeSettings,exportedAt:new Date().toISOString()},null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='scorecard_config_'+new Date().toISOString().slice(0,10)+'.json';a.click();showToast('Config exported');
+}
+function importConfigJSON(event){
+  const file=event.target.files[0];if(!file)return;
+  const reader=new FileReader();reader.onload=function(e){
+    try{const cfg=JSON.parse(e.target.result);if(!cfg.qaChecks&&!cfg.aiChecks&&!cfg.settings){showToast('Invalid config file');return;}
+    if(!confirm('Import this config? Current checks and settings will be overwritten.'))return;
+    if(cfg.qaChecks&&cfg.qaChecks.length>0)activeQAChecks=cfg.qaChecks;if(cfg.aiChecks&&cfg.aiChecks.length>0)activeAIChecks=cfg.aiChecks;if(cfg.settings)activeSettings=cfg.settings;
+    saveConfigToLocalStorage();renderAll();showToast('Config imported');}catch(err){showToast('Invalid JSON file');}};
+  reader.readAsText(file);event.target.value='';
+}
+
+// ===== INIT =====
+loadConfig();
+renderAll();
+renderLog();
+renderAILog();
+const savedURL=localStorage.getItem('gsheet_url');
+if(savedURL){document.getElementById('gsheet-url').value=savedURL;document.getElementById('gsheet-status').style.display='block';loadConfigFromGSheet(true);}
+</script>
+</body>
+</html>
